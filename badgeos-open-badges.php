@@ -13,7 +13,11 @@
  */
 
 class BadgeOS_Open_Badges_Issuer_AddOn {
-	public static final $dependencies = array(
+	public static $basename = '';
+	public static $directory_path = '';
+	public static $directory_url = '';
+
+	public static $dependencies = array(
 		'BadgeOS' => 'http://wordpress.org/plugins/badgeos/',
 		'JSON_API' => 'http://wordpress.org/plugins/json-api/'
 	);
@@ -39,8 +43,8 @@ class BadgeOS_Open_Badges_Issuer_AddOn {
 		if ( self::meets_requirements() ) {
 			load_plugin_textdomain( 'bosobi', false, dirname( self::$basename ) . '/languages' );
 
-			require_once( sprintf( "%s/includes/settings.php", self::$directory_path ) );
-			require_once( sprintf( "%s/includes/logging-functions.php", self::$directory_path ) );
+			require_once( sprintf( "%s/includes/class-bosobi-settings.php", self::$directory_path ) );
+			require_once( sprintf( "%s/includes/class-bosobi-logging.php", self::$directory_path ) );
 
 			if ( ! is_admin() ) {
 				require_once( sprintf( "%s/public/class-bosobi-shortcodes.php", self::$directory_path ) );
@@ -53,7 +57,7 @@ class BadgeOS_Open_Badges_Issuer_AddOn {
 	 *
 	 * @since 1.0.0
 	 */
-	public function activate() {
+	public static function activate() {
 		// If BadgeOS is available, run our activation functions
 		if ( self::$meets_requirements() ) {
 			$json_api_controllers = explode( ",", get_option( 'json_api_controllers' ) );
@@ -81,6 +85,7 @@ class BadgeOS_Open_Badges_Issuer_AddOn {
 						<p>
 							<?php printf( __( 'Open Badges Issuer requires %s and has been <a href="%s">deactivated</a>. Please install and activate %s and then reactivate this plugin.', 'bosobi' ),  $dependency, admin_url( 'plugins.php' ), $dependency ); ?>
 						</p>
+						<?php
 					}
 				}
 				?>

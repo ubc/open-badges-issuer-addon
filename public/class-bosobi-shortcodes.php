@@ -8,13 +8,13 @@ class BOSOBI_Shortcodes {
 		add_shortcode( 'badgeos_backpack_push', array( __CLASS__, 'shortcode_push') );
 		add_shortcode( 'badgeos_backpack_registered_email', array( __CLASS__, 'shortcode_email') );
 
-		if ( get_option( BOSOBI_Settings::field_slug( 'public_evidence' ) ) ) {
+		if ( BOSOBI_Settings::get( 'public_evidence' ) ) {
 			add_filter( 'badgeos_public_submissions', array( __CLASS__, 'set_public_badge_submission' ), 999, 1 );
 		}
 
 		add_action( 'wp_ajax_open_badges_recorder', array( __CLASS__, 'ajax_request_recorder' ) );
 		add_filter( 'json_api_controllers', array( __CLASS__, 'add_badge_controller' ) );
-		add_filter( 'json_api_badge_controller_path', array( __CLASS__,'get_badge_controller_path' ) );
+		add_filter( 'json_api_badge_controller_path', array( __CLASS__, 'get_badge_controller_path' ) );
 	}
 
 	public static function register_scripts_and_styles() {
@@ -116,7 +116,7 @@ class BOSOBI_Shortcodes {
 	
 	public function registered_email( $user_id = 0 ) {
 		$user_id = ( $user_id ) ? $user_id : get_current_user_id();
-		$email_alt_field = get_option( 'open_badges_issuer_alt_email' );
+		$email_alt_field = BOSOBI_Settings::get( 'alt_email' );
 
 		if ( $email_alt_field !== "" && get_user_meta( $user_id, $email_alt_field, true ) !== "" ){
 			return get_user_meta( $user_id, $email_alt_field, true );

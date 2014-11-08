@@ -11,9 +11,10 @@
  */
 class BOSOBI_Logging {
 	
-	public static function init() {	
+	public static function init() {
+		error_log("--> LOAD ".__CLASS__);
+		
 		add_filter( 'bosobi_post_log_entry', array( __CLASS__, 'badgeos_post_log_entry' ), 10, 2 );
-
 		self::create_log_post_type();
 	}
 	
@@ -112,15 +113,17 @@ class BOSOBI_Logging {
 	
 		// Insert our entry as a 'badgeos-log-entry' post
 		$log_post_id = wp_insert_post( array(
-			'post_title'  => $args['title'],
-			'post_content'=> $args['content'],
-			'post_author' => absint( $args['user_id'] ),
-			'post_type'   => 'open-badge-entry',
-			'tags_input'  => $args['action'],
-			'post_status' => 'publish',
+			'post_title'   => $args['title'],
+			'post_content' => $args['content'],
+			'post_author'  => absint( $args['user_id'] ),
+			'post_type'    => 'open-badge-entry',
+			'tags_input'   => $args['action'],
+			'post_status'  => 'publish',
 		) );
 	
 		// Return the ID of the newly created post
 		return $log_post_id;
 	}
 }
+
+add_action( 'init', array( 'BOSOBI_Logging', 'init' ) );

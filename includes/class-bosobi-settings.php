@@ -17,6 +17,7 @@ class BOSOBI_Settings {
 		add_action( 'admin_init', array( __CLASS__, 'init_fields' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'init_admin_menus' ) );
 		add_action( 'network_admin_menu', array(__CLASS__, 'init_network_admin_menus' ) );
+		add_action( 'admin_post_update_bosobi_settings', array( __CLASS__, 'save_network_settings' ) );
 	}
 	
 	/**
@@ -49,6 +50,13 @@ class BOSOBI_Settings {
 		);
 	}
 
+	/**
+	 * This should be used to wrap any reference to the field that is external to this class.
+	 */
+	public static function field_slug( $slug ) {
+		return self::$prefix . '_' . $slug;
+	}
+
 	public static function get( $slug, $use_default = true ) {
 		if ( is_network_admin() ) {
 			$return = get_site_option( self::field_slug( $slug ) );
@@ -64,7 +72,7 @@ class BOSOBI_Settings {
 	}
 
 	public static function get_default( $slug ) {
-		if ( ! is_network_admin() ) {
+		if ( is_multisite() && ! is_network_admin() ) {
 			$return = get_site_option( self::field_slug( $slug ) );
 		}
 		
@@ -73,6 +81,18 @@ class BOSOBI_Settings {
 		}
 
 		return $return;
+	}
+
+	public static function save_network_settings( $data ) {
+		foreach ( self::$fields as $slug => $field ) {
+			$slug = self::field_slug( $slug );
+
+			if ( ! empty( $data[ $slug ] ) ) {
+				update_site_option( $slug, $data[ $slug ] );
+			} else {
+				delete_site_option( $slug );
+			}
+		}
 	}
 	
 	public static function render() {
@@ -84,14 +104,9 @@ class BOSOBI_Settings {
 
 		if ( is_network_admin() ) {
 			if ( ! empty( $_POST ) ) {
-				/*
-				self::$node_url = ( isset( $_POST['stream_node_url'] ) ? $_POST['stream_node_url'] : '' );
-				self::$url_override = ( isset( $_POST['stream_url_override'] ) ? $_POST['stream_url_override'] : false );
-				
-				update_site_option( 'stream_node_url', self::$node_url );
-				update_site_option( 'stream_url_override', self::$url_override );
-				*/
+				self::save_network_settings( $_POST );
 			}
+			//$action = admin_url('admin-post.php?action=update_bosobi_settings');
 		} else {
 			$action = 'action="options.php"';
 		}
@@ -116,7 +131,7 @@ class BOSOBI_Settings {
 	}
 	
 	public static function json_api_controller_status() {
-		$json_api_controllers = explode( ",", get_option( 'json_api_controllers' ));
+		$json_api_controllers = explode( ",", get_option( 'json_api_controllers' ) );
 
 		if ( ! in_array( 'badge', $json_api_controllers) ) {
 			?>
@@ -147,8 +162,13 @@ class BOSOBI_Settings {
 	}
 	
 	public static function section_override() {
-		echo __('These are optional settings to set the <a href="https://github.com/mozilla/openbadges-specification/blob/master/Assertion/latest.md#issuerorganization">IssuerOrganiztion</a>. 
-		By default the add-on will use the blog name and url.', 'bosobi');
+		if ( ! is_multisite() || is_network_admin() ) {
+			echo __('These are optional settings to set the <a href="https://github.com/mozilla/openbadges-specification/blob/master/Assertion/latest.md#issuerorganization">IssuerOrganiztion</a>. 
+			By default the add-on will use the blog name and url.', 'bosobi');			
+		} else {
+			echo __('These are optional settings to set the <a href="https://github.com/mozilla/openbadges-specification/blob/master/Assertion/latest.md#issuerorganization">IssuerOrganiztion</a>. 
+			By default the add-on will use the configuration set by your Network Administrator.', 'bosobi');			
+		}
 	}
 
 	/**
@@ -157,8 +177,9 @@ class BOSOBI_Settings {
 	public static function field_input( $args ) {
 		$slug = $args['slug']; // Get the field name from the $args array
 		$value = self::get( $slug, false ); // Get the value of this setting
-
 		$default = self::get_default( $slug );
+		$slug = self::field_slug( $slug );
+
 		$placeholder = empty( $default ) ? '' :  ' placeholder="' . $default . '"';
 
 		?>
@@ -173,8 +194,9 @@ class BOSOBI_Settings {
 	public static function field_textarea( $args ) {
 		$slug = $args['slug']; // Get the field name from the $args array
 		$value = self::get( $slug, false ); // Get the value of this setting
-
 		$default = self::get_default( $slug );
+		$slug = self::field_slug( $slug );
+
 		$placeholder = empty( $default ) ? '' :  ' placeholder="' . $default . '"';
 
 		?>
@@ -191,6 +213,7 @@ class BOSOBI_Settings {
 	public static function field_select( $args ) {
 		$slug = $args['slug']; // Get the field name from the $args array
 		$value = self::get( $slug ); // Get the value of this setting
+		$slug = self::field_slug( $slug );
 
 		?>
 		<select name="<?php echo $slug; ?>" id="<?php echo $slug; ?>">
@@ -213,7 +236,17 @@ class BOSOBI_Settings {
 	*/
 	public static function field_radio( $args ) {
 		$slug = $args['slug']; // Get the field name from the $args array
-		$value = self::get( $slug ); // Get the value of this setting
+		$value = self::get( $slug, false ); // Get the value of this setting
+		$default = self::get_default( $slug );
+		$slug = self::field_slug( $slug );
+
+		if ( is_multisite() && ! is_network_admin() && ! empty( $default ) ) {
+			$args['choices']['default'] = "Use Network Setting (" . $args['choices'][ $default ] . ")";
+
+			if ( empty( $value ) ) {
+				$value = 'default';
+			}
+		}
 
 		foreach( $args['choices'] as $val => $trans ) {
 			$val = esc_attr( $val );
@@ -230,10 +263,6 @@ class BOSOBI_Settings {
 		<p class="description"><?php echo $args['description']; ?></p>
 		<?php
 	}
-
-	public static function field_slug( $slug ) {
-		return self::$prefix . '_' . $slug;
-	}
 	
 	public static function init_fields() {
 		add_settings_section(
@@ -249,27 +278,28 @@ class BOSOBI_Settings {
 			array( __CLASS__, 'section_general' ), 
 			self::$page_slug
 		);
-		
-		add_settings_section(
-			self::$sections_slug . '-override',
-			__( 'Issuer Organiztion Override', 'bosobi' ), 
-			array( __CLASS__, 'section_override'), 
-			self::$page_slug
-		);
 
+		if ( is_network_admin() || self::get( 'allow_override' ) === "on" ) {
+			add_settings_section(
+				self::$sections_slug . '-override',
+				__( 'Issuer Organiztion Override', 'bosobi' ), 
+				array( __CLASS__, 'section_override'), 
+				self::$page_slug
+			);
 
-		self::init_section_fields( 'general', array(
-			'assertion_type' => array(
-				'title' => "Assertion Type",
-				'type' => 'radio',
-				'choices' => array(
-					'signed' => 'Signed',
-					'hosted' => 'Hosted'
+			self::init_section_fields( 'general', array(
+				'assertion_type' => array(
+					'title' => "Assertion Type",
+					'type' => 'radio',
+					'choices' => array(
+						'signed' => 'Signed',
+						'hosted' => 'Hosted'
+					),
+					'default' => 'signed',
+					'description' => __( 'TODO: Add a description of what the difference between them is.', 'bosobi' ),
 				),
-				'default' => 'signed',
-				'description' => __( 'TODO: Add a description of what the difference between them is.', 'bosobi' ),
-			),
-		) );
+			) );
+		}
 		
 		if ( is_network_admin() ) {
 			self::init_section_fields( 'general', array(
@@ -304,40 +334,42 @@ class BOSOBI_Settings {
 			),
 		) );
 
-		self::init_section_fields( 'override', array(
-			'org_name' => array(
-				'title' => "Name",
-				'type' => 'input',
-				'default' => get_bloginfo( 'name', 'display' ),
-				'description' => __( 'The name of the issuing organization.', 'bosobi' ),
-			),
-			'org_url' => array(
-				'title' => "URL",
-				'type' => 'input',
-				'default' => site_url(),
-				'description' => __( 'URL of the institution.', 'bosobi' ),
-			),
-			'org_description' => array(
-				'title' => "Description",
-				'type' => 'textarea',
-				'description' => __( 'A short description of the institution.', 'bosobi' ),
-			),
-			'org_image' => array(
-				'title' => "Image",
-				'type' => 'input',
-				'description' => __( 'An image representing the institution.', 'bosobi' ),
-			),
-			'org_email' => array(
-				'title' => "Email",
-				'type' => 'input',
-				'description' => __( 'Contact address for someone at the organization.', 'bosobi' ),
-			),
-			'org_revocationList' => array(
-				'title' => "Revocation List Url",
-				'type' => 'input',
-				'description' => __( 'URL of the Badge Revocation List. The endpoint should be a JSON representation of an object where the keys are the uid of a revoked badge assertion, and the values are the reason for revocation. This is only necessary for signed badges.', 'bosobi' ),
-			),
-		) );
+		if ( is_network_admin() || self::get( 'allow_override' ) === "on" ) {
+			self::init_section_fields( 'override', array(
+				'org_name' => array(
+					'title' => "Name",
+					'type' => 'input',
+					'default' => get_bloginfo( 'name', 'display' ),
+					'description' => __( 'The name of the issuing organization.', 'bosobi' ),
+				),
+				'org_url' => array(
+					'title' => "URL",
+					'type' => 'input',
+					'default' => site_url(),
+					'description' => __( 'URL of the institution.', 'bosobi' ),
+				),
+				'org_description' => array(
+					'title' => "Description",
+					'type' => 'textarea',
+					'description' => __( 'A short description of the institution.', 'bosobi' ),
+				),
+				'org_image' => array(
+					'title' => "Image URL",
+					'type' => 'input',
+					'description' => __( 'An image representing the institution.', 'bosobi' ),
+				),
+				'org_email' => array(
+					'title' => "Email",
+					'type' => 'input',
+					'description' => __( 'Contact address for someone at the organization.', 'bosobi' ),
+				),
+				'org_revocationList' => array(
+					'title' => "Revocation List Url",
+					'type' => 'input',
+					'description' => __( 'URL of the Badge Revocation List. The endpoint should be a JSON representation of an object where the keys are the uid of a revoked badge assertion, and the values are the reason for revocation. This is only necessary for signed badges.', 'bosobi' ),
+				),
+			) );
+		}
 	}
 
 	public static function init_section_fields( $section, $fields ) {

@@ -7,6 +7,7 @@ class JSON_API_Badge_Controller {
 
 	public function assertion() {
 		global $json_api;
+		error_log("retrieve assertion with uid; " . $json_api->query->uid);
 
 		$uid_str = $json_api->query->uid;
 		$uid = explode ( "-" , $uid_str );
@@ -18,7 +19,7 @@ class JSON_API_Badge_Controller {
 			$base_url = site_url() . '/' . get_option( 'json_api_base', 'api' );
 			$submission = get_post( $post_id );
 			$salt = "0ct3L";
-			$email = BadgeOS_OpenBadgesIssuer::registered_email( $user_id );
+			$email = BOSOBI_Shortcodes::registered_email( $user_id );
 			$post_type = get_post_type( $post_id );
 			
 			if ( $post_type === "submission" && BOSOBI_Settings::get( 'public_evidence' ) ) {
@@ -52,6 +53,7 @@ class JSON_API_Badge_Controller {
 	public function badge_class() {
 		global $json_api;
 		$post_id = $json_api->query->uid;
+		error_log("retrieve badge_class with uid; " . $post_id);
 
 		if ( isset( $post_id ) ) {
 			$base_url = site_url() . '/' . get_option( 'json_api_base', 'api' );
@@ -198,4 +200,5 @@ class JSON_API_Badge_Controller {
 		);
 	}
 }
+
 ?>

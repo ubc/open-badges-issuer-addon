@@ -11,31 +11,12 @@ class BOSOBI_Shortcodes {
 		if ( BOSOBI_Settings::get( 'public_evidence' ) ) {
 			add_filter( 'badgeos_public_submissions', array( __CLASS__, 'set_public_badge_submission' ), 999, 1 );
 		}
-
-		add_action( 'wp_ajax_open_badges_recorder', array( __CLASS__, 'ajax_request_recorder' ) );
-		add_filter( 'json_api_controllers', array( __CLASS__, 'add_badge_controller' ) );
-		add_filter( 'json_api_badge_controller_path', array( __CLASS__, 'get_badge_controller_path' ) );
 	}
 
 	public static function register_scripts_and_styles() {
-		wp_register_script( 'mozilla-issuer-api', '//backpack.openbadges.org/issuer.js', array('badgeos-backpack'), null );
+		wp_register_script( 'mozilla-issuer-api', '//backpack.openbadges.org/issuer.js', array( 'badgeos-backpack' ), null );
 		wp_register_script( 'badgeos-backpack', BadgeOS_Open_Badges_Issuer_AddOn::$directory_url . '/public/js/badgeos-backpack.js', array( 'jquery' ), '1.0.0', true );
 		wp_register_style( 'badgeos-backpack-style', BadgeOS_Open_Badges_Issuer_AddOn::$directory_url . '/public/css/badgeos-backpack.css', null, '1.0.2' );
-	}
-
-	/**
-	* Register controllers for custom JSON_API end points.
-	*/
-	public static function add_badge_controller( $controllers ) {
-		$controllers[] = 'badge';
-		return $controllers;
-	}
-
-	/**
-	* Register controllers define path custom JSON_API end points.
-	*/
-	public function set_badge_controller_path() {
-		return sprintf( "%s/api/badge.php", BadgeOS_Open_Badges_Issuer_AddOn::$directory_path );
 	}
 
 	/**
@@ -124,35 +105,6 @@ class BOSOBI_Shortcodes {
 			$user = get_userdata( $user_id );
 			return $user->user_email;
 		}	
-	}
-
-	/**
-	 * Handle ajax request to record sending of badges to backpack.
-	 */
-	function ajax_request_recorder() {
-		// Setup our AJAX query vars
-		$successes = ( isset( $_REQUEST['successes'] ) ? $_REQUEST['successes'] : false );
-		$errors    = ( isset( $_REQUEST['errors'] )    ? $_REQUEST['errors']    : false );
-		$user_id   = ( isset( $_REQUEST['user_id'] )   ? $_REQUEST['user_id']   : get_current_user_id() );
-		
-		if ( ! empty( $successes ) ) {
-			foreach ( $successes as $success => $uid ) {
-				add_user_meta( $user_id, '_badgeos_backpack_pushed', $uid, false );
-				BadgeOS_OpenBadgesIssuer_Logging::badgeos_obi_post_log_entry( $uid, $user_id, 'success' );
-			}
-		}
-		
-		if ( ! empty( $errors ) ) {
-			foreach ( $errors as $error ) {
-				$uid = $error['assertion'];
-				BadgeOS_OpenBadgesIssuer_Logging::badgeos_obi_post_log_entry( $uid, $user_id, 'failed', json_encode( $error ) );
-			}
-		}
-		
-		wp_send_json_success( array(
-			'successes'   => get_user_meta( $user_id, '_badgeos_backpack_pushed' ),
-			'resend_text' => __( 'Resend to Mozilla Backpack', 'bosobi' ),
-		) );
 	}
 
 }

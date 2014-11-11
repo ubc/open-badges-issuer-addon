@@ -16,6 +16,37 @@ class BOSOBI_Logging {
 		
 		add_filter( 'bosobi_post_log_entry', array( __CLASS__, 'badgeos_post_log_entry' ), 10, 2 );
 		self::create_log_post_type();
+
+		add_action( 'wp_ajax_open_badges_recorder', array( __CLASS__, 'ajax_request_recorder' ) );
+	}
+
+	/**
+	 * Handle ajax request to record sending of badges to backpack.
+	 */
+	function ajax_request_recorder() {
+		// Setup our AJAX query vars
+		$successes = ( isset( $_REQUEST['successes'] ) ? $_REQUEST['successes'] : false );
+		$errors    = ( isset( $_REQUEST['errors'] )    ? $_REQUEST['errors']    : false );
+		$user_id   = ( isset( $_REQUEST['user_id'] )   ? $_REQUEST['user_id']   : get_current_user_id() );
+		
+		if ( ! empty( $successes ) ) {
+			foreach ( $successes as $success => $uid ) {
+				add_user_meta( $user_id, '_badgeos_backpack_pushed', $uid, false );
+				self::post_log_entry( $uid, $user_id, 'success' );
+			}
+		}
+		
+		if ( ! empty( $errors ) ) {
+			foreach ( $errors as $error ) {
+				$uid = $error['assertion'];
+				self::post_log_entry( $uid, $user_id, 'failed', json_encode( $error ) );
+			}
+		}
+		
+		wp_send_json_success( array(
+			'successes'   => get_user_meta( $user_id, '_badgeos_backpack_pushed' ),
+			'resend_text' => __( 'Resend to Mozilla Backpack', 'bosobi' ),
+		) );
 	}
 	
 	/**

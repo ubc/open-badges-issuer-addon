@@ -43,6 +43,7 @@ class BadgeOS_Open_Badges_Issuer_AddOn {
 		if ( self::meets_requirements() ) {
 			load_plugin_textdomain( 'bosobi', false, dirname( self::$basename ) . '/languages' );
 
+			require_once( sprintf( "%s/includes/class-bosobi-json.php", self::$directory_path ) );
 			require_once( sprintf( "%s/includes/class-bosobi-settings.php", self::$directory_path ) );
 			require_once( sprintf( "%s/includes/class-bosobi-logging.php", self::$directory_path ) );
 

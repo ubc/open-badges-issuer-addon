@@ -14,6 +14,8 @@ class BOSOBI_Settings {
 		$sections_slug = self::$prefix . '-sections';
 		$page_slug = self::$prefix . '-page';
 
+		add_action( 'init', array( __CLASS__, 'init_field_defaults' ) );
+		add_action( 'admin_init', array( __CLASS__, 'init_field_defaults' ) );
 		add_action( 'admin_init', array( __CLASS__, 'init_fields' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'init_admin_menus' ) );
 		add_action( 'network_admin_menu', array(__CLASS__, 'init_network_admin_menus' ) );
@@ -76,7 +78,7 @@ class BOSOBI_Settings {
 			$return = get_site_option( self::field_slug( $slug ) );
 		}
 		
-		if ( empty( $return ) ) {
+		if ( empty( $return ) && ! empty( self::$fields[ $slug ]['default'] ) ) {
 			$return = self::$fields[ $slug ]['default'];
 		}
 
@@ -263,6 +265,32 @@ class BOSOBI_Settings {
 		<p class="description"><?php echo $args['description']; ?></p>
 		<?php
 	}
+
+	public static function init_field_defaults() {
+		self::$fields = array(
+			'assertion_type' => array(
+				'default' => 'signed',
+			),
+			'allow_override' => array(
+				'default' => 'off',
+			),
+			'alt_email' => array(),
+			'assertion_type' => array(
+				'default' => 'signed',
+			),
+			'public_evidence' => array(),
+			'org_name' => array(
+				'default' => get_bloginfo( 'name', 'display' ),
+			),
+			'org_url' => array(
+				'default' => site_url(),
+			),
+			'org_description' => array(),
+			'org_image' => array(),
+			'org_email' => array(),
+			'org_revocationList' => array(),
+		);
+	}
 	
 	public static function init_fields() {
 		add_settings_section(
@@ -295,7 +323,6 @@ class BOSOBI_Settings {
 						'signed' => 'Signed',
 						'hosted' => 'Hosted'
 					),
-					'default' => 'signed',
 					'description' => __( 'TODO: Add a description of what the difference between them is.', 'bosobi' ),
 				),
 			) );
@@ -310,7 +337,6 @@ class BOSOBI_Settings {
 						'on' => 'Enable',
 						'off' => 'Disable'
 					),
-					'default' => 'off',
 					'description' => __( 'Allows sub-sites to override the settings on this page.', 'bosobi' ),
 				),
 			) );
@@ -339,13 +365,11 @@ class BOSOBI_Settings {
 				'org_name' => array(
 					'title' => "Name",
 					'type' => 'input',
-					'default' => get_bloginfo( 'name', 'display' ),
 					'description' => __( 'The name of the issuing organization.', 'bosobi' ),
 				),
 				'org_url' => array(
 					'title' => "URL",
 					'type' => 'input',
-					'default' => site_url(),
 					'description' => __( 'URL of the institution.', 'bosobi' ),
 				),
 				'org_description' => array(
@@ -374,7 +398,6 @@ class BOSOBI_Settings {
 
 	public static function init_section_fields( $section, $fields ) {
 		foreach ( $fields as $slug => $field ) {
-			self::$fields[ $slug ]['default'] = $field['default'];
 			$field['slug'] = $slug;
 			$title = $field['title'];
 			$type = $field['type'];

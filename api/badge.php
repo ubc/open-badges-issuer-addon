@@ -1,13 +1,17 @@
 <?php
-/*
-Controller name: Mozilla Open Badges Generator
-Controller description: Generates Mozilla Open Badges compatible Assertions for the BadgeOS plugin
-*/
+/**
+ * Controller name: Mozilla Open Badges Generator
+ * Controller description: Generates Mozilla Open Badges compatible Assertions for the BadgeOS plugin
+ */
 class JSON_API_Badge_Controller {
 
+	public function public_key() {
+		return BOSOBI_Settings::get( 'public_key' );
+	}
+
 	public function assertion() {
+		require_once( sprintf( "%s/includes/jwt.php", BadgeOS_Open_Badges_Issuer_AddOn::$directory_path ) );
 		global $json_api;
-		error_log("retrieve assertion with uid; " . $json_api->query->uid);
 
 		$uid_str = $json_api->query->uid;
 		$uid = explode ( "-" , $uid_str );
@@ -29,6 +33,18 @@ class JSON_API_Badge_Controller {
 				$achievement_id = $post_id;
 			}
 
+			if ( BOSOBI_Settings::get( 'assertion_type' ) === 'signed' ) {
+				$verification = array(
+					"type" => "signed",
+					"url"  => $base_url .'/badge/public_key/',
+				);
+			} else {
+				$verification = array(
+					"type" => "hosted",
+					"url"  => $base_url .'/badge/assertion/?uid=' . $uid_str,
+				);
+			}
+
 			$assertion = array_merge( array(
 				"uid" => $uid_str,
 				"recipient" => array(
@@ -38,22 +54,25 @@ class JSON_API_Badge_Controller {
 					"identity" => 'sha256$' . hash( 'sha256', $email . $salt )
 				),
 				"image"    => wp_get_attachment_url( get_post_thumbnail_id( $achievement_id ) ),
+				// TODO: Bake the image using the Baker API. See http://backpack.openbadges.org/baker?assertion=http://yoursite.com/badge-assertion.json
 				"issuedOn" => strtotime( $submission->post_date ),
-				"badge"    => $base_url . '/badge/badge_class/?uid=' . $achievement_id ,
-				"verify"   => array(
-					"type" => "hosted",
-					"url"  => $base_url .'/badge/assertion/?uid=' . $uid_str
-				)
+				"badge"    => $base_url . '/badge/badge_class/?uid=' . $achievement_id,
+				"verify"   => $verification
 			), $assertion );
 		}
-		
+
+		// For signed assertions, the payload must be encoded as a JSON Web Signature
+		// See https://github.com/openbadges/openbadges-specification/blob/master/Assertion/latest.md
+		if ( BOSOBI_Settings::get( 'assertion_type' ) === 'signed' ) {
+			$assertion = JWT::encode( $assertion, BOSOBI_Settings::get( 'private_key' ) );
+		}
+
 		return $assertion;
 	}
 	
 	public function badge_class() {
 		global $json_api;
 		$post_id = $json_api->query->uid;
-		error_log("retrieve badge_class with uid; " . $post_id);
 
 		if ( isset( $post_id ) ) {
 			$base_url = site_url() . '/' . get_option( 'json_api_base', 'api' );
@@ -70,18 +89,22 @@ class JSON_API_Badge_Controller {
 	}
 
 	public function issuer() {
-		$issuerFields = array( 'description', 'image', 'email', 'revocationList' );
-		$issuer = array(
+		$issuerFields = array( 'description', 'image', 'email' );
+		$issuer = array( // These fields are required.
 			"name" => BOSOBI_Settings::get( 'org_name' ),
 			"url"  => BOSOBI_Settings::get( 'org_url' )
 		);
 		
 		foreach ( $issuerFields as $field ) {
 			$val = BOSOBI_Settings::get( 'org_' . $field );
-
 			if ( ! empty( $val ) ) {
 				$issuer[$field] = $val;	
 			}
+		}
+
+		if ( BOSOBI_Settings::get( 'assertion_type' ) === 'signed' ) {
+			// This field is only needed for signed assertions.
+			$issuer['revocationList'] = BOSOBI_Settings::get( 'org_revocationList' );
 		}
 		
 		return $issuer;

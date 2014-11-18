@@ -42,6 +42,22 @@
 	text-decoration: none;
 }
 
+.badgeos_backpack_action .button-download {
+	-webkit-box-shadow: inset 0 1px 0 rgba(230, 200, 120, 0.5),0 1px 0 rgba(0, 0, 0, 0.15);
+	box-shadow: inset 0 1px 0 rgba(230, 200, 120, 0.5),0 1px 0 rgba(0, 0, 0, 0.15);
+
+	background: #CCA22E;
+	border-color: #A27400;
+}
+
+.badgeos_backpack_action .button-download:hover {
+	-webkit-box-shadow: inset 0 1px 0 rgba(230, 200, 120, 0.6);
+	box-shadow: inset 0 1px 0 rgba(230, 200, 120, 0.6);
+
+	background: #BE8C1E;
+	border-color: #A27400;
+}
+
 .badgeos_backpack_action .button[disabled] {
 	color: #94CDE7 !important;
 	background: #298CBA !important;

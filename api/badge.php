@@ -183,6 +183,7 @@ class JSON_API_Badge_Controller {
 
 		$query_count += $achievement_posts->found_posts;
 		$base_url = site_url() . '/' . get_option( 'json_api_base', 'api' ) . '/badge/assertion/?uid=';
+		$download_url = 'http://backpack.openbadges.org/baker?assertion=' . $base_url . $uid_str . '&bake=1';
 		$pushed_items = get_user_meta( absint( $user_id ), '_badgeos_backpack_pushed' );
 		$pushed_badges = empty( $pushed_items ) ? (array) $pushed_items : array();
 		
@@ -204,6 +205,7 @@ class JSON_API_Badge_Controller {
 
 				?>
 				<div class="badgeos_backpack_action">
+					<a href="<?php echo $download_url; ?>" class="button button-download">Download</a>
 					<a href="" class="badgeos_backpack button" data-uid="<?php echo $base_url . $uid; ?>"><?php echo $button_text; ?></a>
 					<input type="checkbox" value="<?php echo $base_url . $uid; ?>" name="badgeos_backpack_issues[]" />
 				</div>

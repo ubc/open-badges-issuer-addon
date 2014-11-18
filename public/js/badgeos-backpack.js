@@ -47,7 +47,7 @@ jQuery(document).ready( function($) {
 		issueBadges(values);
 	});
 	
-	function issueBadges(assertions) {
+	function issueBadges( assertions ) {
 		// Issuer API can't do modal in IE https://github.com/mozilla/openbadges/issues/1002
 		if ( getInternetExplorerVersion() != -1 ) {
 			OpenBadges.issue_no_modal(assertions);
@@ -58,7 +58,7 @@ jQuery(document).ready( function($) {
 		}
 	}
 	
-	function handle_backpack_response(errors, successes){
+	function handle_backpack_response( errors, successes ) {
 		$.ajax({
 			url: badgeos.ajax_url,
 			data: {
@@ -101,7 +101,7 @@ jQuery(document).ready( function($) {
 				if ( response.status !== 'ok' ) {
 					console.log('No badge data returned');
 				} else {
-					$.each( response.achievements, function(index, value) {
+					$.each( response.achievements, function( index, value ) {
 						$('#badgeos-achievements-container').append( value.data );
 					} );
 				}

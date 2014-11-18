@@ -53,7 +53,7 @@ class BOSOBI_Shortcodes {
 	
 		wp_localize_script( 'badgeos-achievements', 'badgeos', array(
 			'ajax_url' => esc_url( admin_url( 'admin-ajax.php', 'relative' ) ),
-			'json_url' => esc_url( site_url().'/'.get_option('json_api_base', 'api').'/badge/achievements/' ),
+			'json_url' => esc_url( site_url() . '/' . get_option( 'json_api_base', 'api' ) . '/badge/achievements/' ),
 			'user_id'  => $user_id,
 		) );
 		

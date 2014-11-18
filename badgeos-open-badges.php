@@ -60,7 +60,7 @@ class BadgeOS_Open_Badges_Issuer_AddOn {
 	 */
 	public static function activate() {
 		// If BadgeOS is available, run our activation functions
-		if ( self::$meets_requirements() ) {
+		if ( self::meets_requirements() ) {
 			$json_api_controllers = explode( ",", get_option( 'json_api_controllers' ) );
 
 			if ( ! in_array( 'badge', $json_api_controllers ) ) {

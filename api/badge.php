@@ -19,6 +19,8 @@ class JSON_API_Badge_Controller {
 		$user_id = $uid[2];
 		$assertion = array();
 
+		$for_baking = $json_api->query->bake;
+
 		if ( isset( $post_id ) ) {
 			$base_url = site_url() . '/' . get_option( 'json_api_base', 'api' );
 			$submission = get_post( $post_id );
@@ -45,6 +47,8 @@ class JSON_API_Badge_Controller {
 				);
 			}
 
+			$image_url = wp_get_attachment_url( get_post_thumbnail_id( $achievement_id ) );
+
 			$assertion = array_merge( array(
 				"uid" => $uid_str,
 				"recipient" => array(
@@ -53,7 +57,7 @@ class JSON_API_Badge_Controller {
 					"salt"     => $salt,
 					"identity" => 'sha256$' . hash( 'sha256', $email . $salt )
 				),
-				"image"    => wp_get_attachment_url( get_post_thumbnail_id( $achievement_id ) ),
+				"image"    => $for_baking ? $image_url : 'http://backpack.openbadges.org/baker?assertion=' . $base_url . '/badge/assertion/?uid=' . $uid_str . '&bake=1',
 				// TODO: Bake the image using the Baker API. See http://backpack.openbadges.org/baker?assertion=http://yoursite.com/badge-assertion.json
 				"issuedOn" => strtotime( $submission->post_date ),
 				"badge"    => $base_url . '/badge/badge_class/?uid=' . $achievement_id,

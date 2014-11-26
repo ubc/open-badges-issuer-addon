@@ -33,6 +33,7 @@ class JSON_API_Badge_Controller {
 				$assertion['evidence'] = get_permalink( $post_id );
 			} else {
 				$achievement_id = $post_id;
+				$assertion['evidence'] = get_permalink( $achievement_id );
 			}
 
 			if ( BOSOBI_Settings::get( 'assertion_type' ) === 'signed' ) {
@@ -61,7 +62,7 @@ class JSON_API_Badge_Controller {
 				// TODO: Bake the image using the Baker API. See http://backpack.openbadges.org/baker?assertion=http://yoursite.com/badge-assertion.json
 				"issuedOn" => strtotime( $submission->post_date ),
 				"badge"    => $base_url . '/badge/badge_class/?uid=' . $achievement_id,
-				"verify"   => $verification
+				"verify"   => $verification,
 			), $assertion );
 		}
 
@@ -82,13 +83,20 @@ class JSON_API_Badge_Controller {
 			$base_url = site_url() . '/' . get_option( 'json_api_base', 'api' );
 			$badge = get_post( $post_id );
 
-			return array(
+			$class = array(
 				"name"        => $badge->post_title,
   				"description" => ( $badge->post_content ) ? html_entity_decode( strip_tags( $badge->post_content ), ENT_QUOTES, 'UTF-8' ) : "",
   				"image"       => wp_get_attachment_url( get_post_thumbnail_id( $post_id )),
   				"criteria"    => get_permalink( $post_id ),
   				"issuer"      => $base_url . '/badge/issuer/'
   			);
+			
+			$tags = wp_get_post_tags( array( 'fields' => 'names' ) );
+			if ( ! empty( $tags ) ) {
+				$class['tags'] = $tags;
+			}
+
+  			return $class;
 		}
 	}
 

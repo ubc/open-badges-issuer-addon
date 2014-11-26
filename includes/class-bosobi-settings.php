@@ -14,8 +14,8 @@ class BOSOBI_Settings {
 		$sections_slug = self::$prefix . '-sections';
 		$page_slug = self::$prefix . '-page';
 
-		add_action( 'init', array( __CLASS__, 'init_field_defaults' ) );
-		add_action( 'admin_init', array( __CLASS__, 'init_field_defaults' ) );
+		self::init_field_defaults();
+
 		add_action( 'admin_init', array( __CLASS__, 'init_fields' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'init_admin_menus' ) );
 		add_action( 'network_admin_menu', array(__CLASS__, 'init_network_admin_menus' ) );

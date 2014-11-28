@@ -46,14 +46,49 @@ jQuery(document).ready( function($) {
 		$(this).attr( "disabled", true );
 		issueBadges(values);
 	});
+
+	function getSignedAssertions( urls, callback ) {
+		var signatures = [];
+
+		for (var i = assertions.length - 1; i >= 0; i--) {
+			$.ajax({
+				url: assertions[i]
+				type: "GET",
+				dataType: 'JSON',
+				success: function( response ) {
+					console.log( response );
+
+					/*var signature = new KJUR.jws.JWSJS();
+					var sHeader = newline_toDos(document.form1.jwshead1.value);
+					var sPayload = newline_toDos(document.form1.jwspayload1.value);
+					var sPrvKey = document.form1.pemprvkey1.value;*/
+
+					signature.push( response );
+
+					if ( signatures.length == assertions.length ) {
+						callback( signatures );
+					}
+				}
+			})
+			
+		};
+	}
 	
-	function issueBadges( assertions ) {
+	function issueBadges( urls ) {
+		if ( use_signed_assertions === true ) {
+			getSignedAssertions( urls, openModal );
+		} else {
+			openModal( urls );
+		}
+	}
+
+	function openModal( assertions ) {
 		// Issuer API can't do modal in IE https://github.com/mozilla/openbadges/issues/1002
 		if ( getInternetExplorerVersion() != -1 ) {
-			OpenBadges.issue_no_modal(assertions);
+			OpenBadges.issue_no_modal( assertions );
 		} else {
-			OpenBadges.issue(assertions, function(errors, successes) {
-				handle_backpack_response(errors, successes)	
+			OpenBadges.issue(assertions, function( errors, successes ) {
+				handle_backpack_response( errors, successes );
 			});
 		}
 	}

@@ -293,7 +293,7 @@ class BOSOBI_Settings {
 				'default' => 'signed',
 			),
 			'allow_override' => array(
-				'default' => 'off',
+				'default' => 'on',
 			),
 			'alt_email' => array(),
 			'assertion_type' => array(
@@ -304,10 +304,13 @@ class BOSOBI_Settings {
 				'default' => get_bloginfo( 'name', 'display' ),
 			),
 			'org_url' => array(
+				// TODO: Add validation so that the url is properly formed.
 				'default' => site_url(),
 			),
 			'org_description' => array(),
-			'org_image' => array(),
+			'org_image' => array(
+				// TODO: Add validation so that the url is properly formed.
+			),
 			'org_email' => array(),
 			'org_revocationList' => array(),
 			'public_key' => array(),

@@ -52,7 +52,7 @@ jQuery(document).ready( function($) {
 
 		for (var i = assertions.length - 1; i >= 0; i--) {
 			$.ajax({
-				url: assertions[i]
+				url: assertions[i],
 				type: "GET",
 				dataType: 'JSON',
 				success: function( response ) {

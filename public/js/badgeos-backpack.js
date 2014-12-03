@@ -75,7 +75,7 @@ jQuery(document).ready( function($) {
 	}
 	
 	function issueBadges( urls ) {
-		if ( use_signed_assertions === true ) {
+		if ( badgeos.use_signed_assertions === true ) {
 			getSignedAssertions( urls, openModal );
 		} else {
 			openModal( urls );
@@ -127,10 +127,6 @@ jQuery(document).ready( function($) {
 			},
 			dataType: 'json',
 			success: function( response ) {
-				if ( window.console ) {
-					console.log(response);
-				}
-
 				$('.badgeos-spinner').hide();
 
 				if ( response.status !== 'ok' ) {

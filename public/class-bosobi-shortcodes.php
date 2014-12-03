@@ -45,20 +45,19 @@ class BOSOBI_Shortcodes {
 			'user_id' => $user_id,
 		), $atts ) );
 	
-		wp_enqueue_script( 'badgeos-achievements' );
+		wp_localize_script( 'badgeos-backpack', 'badgeos', array(
+			'ajax_url' => esc_url( admin_url( 'admin-ajax.php', 'relative' ) ),
+			'json_url' => esc_url( site_url() . '/' . get_option( 'json_api_base', 'api' ) . '/badge/achievements/' ),
+			'use_signed_assertions' => ( BOSOBI_Settings::get( 'assertion_type' ) === 'signed' ),
+			'user_id'  => $user_id,
+		) );
+	
 		wp_enqueue_script( 'mozilla-issuer-api' );
 		wp_enqueue_script( 'badgeos-backpack' );
 		//wp_enqueue_script( 'jwsjs' );
 
 		wp_enqueue_style( 'badgeos-front' );
 		wp_enqueue_style( 'badgeos-backpack-style' );
-	
-		wp_localize_script( 'badgeos-achievements', 'badgeos', array(
-			'ajax_url' => esc_url( admin_url( 'admin-ajax.php', 'relative' ) ),
-			'json_url' => esc_url( site_url() . '/' . get_option( 'json_api_base', 'api' ) . '/badge/achievements/' ),
-			'use_signed_verification' => ( BOSOBI_Settings::get( 'assertion_type' ) === 'signed' ),
-			'user_id'  => $user_id,
-		) );
 		
 		$badges = null;
 		ob_start();

@@ -43,6 +43,7 @@ class BOSOBI_Settings {
 	}
 
 	static function init_network_admin_menus() {
+		error_log("---> LOADING NETWORK ADMIN PAGE");
 		add_submenu_page( 'settings.php', 
 			__( 'Open Badges Issuer', 'bosobi' ), 
 			__( 'Open Badges Issuer', 'bosobi' ), 
@@ -296,9 +297,6 @@ class BOSOBI_Settings {
 				'default' => 'on',
 			),
 			'alt_email' => array(),
-			'assertion_type' => array(
-				'default' => 'signed',
-			),
 			'public_evidence' => array(),
 			'org_name' => array(
 				'default' => get_bloginfo( 'name', 'display' ),

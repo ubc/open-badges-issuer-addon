@@ -70,7 +70,7 @@ class JSON_API_Badge_Controller {
 					"salt"     => $salt,
 					"identity" => 'sha256$' . hash( 'sha256', $email . $salt )
 				),
-				"image"    => !$for_baking ? $image_url : 'http://backpack.openbadges.org/baker?assertion=' . $base_url . '/badge/assertion/?uid=' . $uid_str . '&bake=1',
+				"image"    => $for_baking ? $image_url : 'http://backpack.openbadges.org/baker?assertion=' . $base_url . '/badge/assertion/?uid=' . $uid_str . '&bake=1',
 				"issuedOn" => strtotime( $submission->post_date ),
 				"badge"    => $base_url . '/badge/badge_class/?uid=' . $achievement_id,
 				"verify"   => $verification,

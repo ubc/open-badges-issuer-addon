@@ -6,7 +6,7 @@
 class JSON_API_Badge_Controller {
 
 	public function public_key() {
-		return BOSOBI_Settings::get( 'public_key' );
+		print_r( BOSOBI_Settings::get( 'public_key' ) );
 	}
 
 	/* TODO: Implement server-side badge baking, instead of delegating our badge backing to backpack.openbadges.org/baker
@@ -70,7 +70,7 @@ class JSON_API_Badge_Controller {
 					"salt"     => $salt,
 					"identity" => 'sha256$' . hash( 'sha256', $email . $salt )
 				),
-				"image"    => $for_baking ? $image_url : 'http://backpack.openbadges.org/baker?assertion=' . $base_url . '/badge/assertion/?uid=' . $uid_str . '&bake=1',
+				"image"    => !$for_baking ? $image_url : 'http://backpack.openbadges.org/baker?assertion=' . $base_url . '/badge/assertion/?uid=' . $uid_str . '&bake=1',
 				"issuedOn" => strtotime( $submission->post_date ),
 				"badge"    => $base_url . '/badge/badge_class/?uid=' . $achievement_id,
 				"verify"   => $verification,
@@ -79,10 +79,10 @@ class JSON_API_Badge_Controller {
 			// For signed assertions, the payload must be encoded as a JSON Web Signature
 			// See https://github.com/openbadges/openbadges-specification/blob/master/Assertion/latest.md
 			if ( $verification['type'] === 'signed' ) {
-				require_once( sprintf( "%s/includes/jwt.php", BadgeOS_Open_Badges_Issuer_AddOn::$directory_path ) );
-				$assertion = JWT::encode( $assertion, BOSOBI_Settings::get( 'private_key' ) );
+				//require_once( sprintf( "%s/includes/jwt.php", BadgeOS_Open_Badges_Issuer_AddOn::$directory_path ) );
+				//$assertion = JWT::encode( $assertion, BOSOBI_Settings::get( 'private_key' ) );
 				
-				/* An alternate method for encoding, in case we question the integrity of the above method. Requires the phpseclib library.
+				// An alternate method for encoding, in case we question the integrity of the above method. Requires the phpseclib library.
 				// See: https://github.com/mozilla/openbadges-validator/issues/23#issuecomment-26600324
 				// require_once( sprintf( "%s/includes/phpseclib-0.3.9/Crypt/RSA.php", BadgeOS_Open_Badges_Issuer_AddOn::$directory_path ) );
 				$old_include_path = set_include_path( sprintf( "%s/includes/phpseclib-0.3.9/", BadgeOS_Open_Badges_Issuer_AddOn::$directory_path ) );
@@ -94,18 +94,24 @@ class JSON_API_Badge_Controller {
 				$rsa->setMGFHash( 'sha256' );
 				$rsa->loadKey( BOSOBI_Settings::get( 'private_key' ), CRYPT_RSA_PRIVATE_FORMAT_PKCS1 );
 
-			    $assertion = $rsa->sign( $assertion );
-			    $assertion = self::base64url_encode( $assertion );
+				$header = array( 'alg' => "RS256" );
+				$headerText = self::base64url_encode( json_encode( $header ) );
+				$assertionText = self::base64url_encode( json_encode( $assertion ) );
 
+				$input = $headerText . '.' . $assertionText;
+
+				$signature = $rsa->sign( $input );
+				$signature = self::base64url_encode( $signature );
+
+				$assertion = $input . '.' . $signature;
 				set_include_path( $old_include_path );
-				*/
 			}
 		}
 
 		return $assertion;
 	}
 
-	private static function base64url_encode( $data ) { 
+	private static function base64url_encode( $data ) {
 		return rtrim( strtr( base64_encode( $data ), '+/', '-_' ), '=' );
 	}
 	

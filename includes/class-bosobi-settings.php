@@ -284,7 +284,7 @@ class BOSOBI_Settings {
 
 		self::$fields = array(
 			'assertion_type' => array(
-				'default' => 'signed',
+				'default' => 'hosted',
 			),
 			'allow_override' => array(
 				'default' => 'on',

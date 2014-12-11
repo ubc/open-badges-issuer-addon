@@ -113,6 +113,14 @@ class BadgeOS_Open_Badges_Issuer_AddOn {
 
 		return $return;
 	}
+
+	public static function is_network_activated() {
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+		}
+		
+		return is_plugin_active_for_network( self::$basename );
+	}
 }
 
 BadgeOS_Open_Badges_Issuer_AddOn::init();

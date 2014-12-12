@@ -12,8 +12,6 @@
 class BOSOBI_Logging {
 	
 	public static function init() {
-		error_log("--> LOAD ".__CLASS__);
-		
 		add_filter( 'bosobi_post_log_entry', array( __CLASS__, 'badgeos_post_log_entry' ), 10, 2 );
 		self::create_log_post_type();
 

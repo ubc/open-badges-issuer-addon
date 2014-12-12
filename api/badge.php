@@ -6,7 +6,10 @@
 class JSON_API_Badge_Controller {
 
 	public function public_key() {
+		error_log('-- START API CALL --');
+		error_log('-> public_key');
 		print_r( BOSOBI_Settings::get( 'public_key' ) );
+		error_log('-- END API CALL --');
 	}
 
 	/* TODO: Implement server-side badge baking, instead of delegating our badge backing to backpack.openbadges.org/baker
@@ -22,6 +25,8 @@ class JSON_API_Badge_Controller {
 	*/
 
 	public function assertion() {
+		error_log('-- START API CALL --');
+		error_log('-> assertion');
 		global $json_api;
 
 		$uid_str = $json_api->query->uid;
@@ -108,6 +113,7 @@ class JSON_API_Badge_Controller {
 			}
 		}
 
+		error_log('-- END API CALL --');
 		return $assertion;
 	}
 
@@ -116,6 +122,8 @@ class JSON_API_Badge_Controller {
 	}
 	
 	public function badge_class() {
+		error_log('-- START API CALL --');
+		error_log('-> badge_class');
 		global $json_api;
 		$post_id = $json_api->query->uid;
 
@@ -136,11 +144,17 @@ class JSON_API_Badge_Controller {
 				$class['tags'] = $tags;
 			}
 
+			error_log('-- END API CALL --');
   			return $class;
 		}
+
+		error_log('-- END API CALL --');
 	}
 
 	public function issuer() {
+		error_log('-- START API CALL --');
+		error_log('-> issuer');
+
 		$issuerFields = array( 'description', 'image', 'email' );
 		$issuer = array( // These fields are required.
 			"name" => BOSOBI_Settings::get( 'org_name' ),
@@ -162,10 +176,13 @@ class JSON_API_Badge_Controller {
 			}
 		}
 		
+		error_log('-- END API CALL --');
 		return $issuer;
 	}
 	
 	public function achievements() {
+		error_log('-- START API CALL --');
+		error_log('-> achievements');
 		global $blog_id, $json_api;
 		
 		$type = badgeos_get_achievement_types_slugs();
@@ -274,6 +291,7 @@ class JSON_API_Badge_Controller {
 			}
 		}
 		
+		error_log('-- END API CALL --');
 		return array(
 			"achievements" => $achievements,
 			"count"        => $achievement_count

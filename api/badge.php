@@ -5,9 +5,18 @@
  */
 class JSON_API_Badge_Controller {
 
+	public function log_headers() {
+		$headers = apache_request_headers();
+
+		foreach ($headers as $header => $value) {
+			error_log("$header: $value");
+		}
+	}
+
 	public function public_key() {
 		error_log('-- START API CALL --');
 		error_log('-> public_key');
+		self::log_headers();
 		print_r( BOSOBI_Settings::get( 'public_key' ) );
 		error_log('-- END API CALL --');
 	}
@@ -27,6 +36,7 @@ class JSON_API_Badge_Controller {
 	public function assertion() {
 		error_log('-- START API CALL --');
 		error_log('-> assertion');
+		self::log_headers();
 		global $json_api;
 
 		$uid_str = $json_api->query->uid;
@@ -124,6 +134,7 @@ class JSON_API_Badge_Controller {
 	public function badge_class() {
 		error_log('-- START API CALL --');
 		error_log('-> badge_class');
+		self::log_headers();
 		global $json_api;
 		$post_id = $json_api->query->uid;
 
@@ -154,6 +165,7 @@ class JSON_API_Badge_Controller {
 	public function issuer() {
 		error_log('-- START API CALL --');
 		error_log('-> issuer');
+		self::log_headers();
 
 		$issuerFields = array( 'description', 'image', 'email' );
 		$issuer = array( // These fields are required.
@@ -183,6 +195,7 @@ class JSON_API_Badge_Controller {
 	public function achievements() {
 		error_log('-- START API CALL --');
 		error_log('-> achievements');
+		self::log_headers();
 		global $blog_id, $json_api;
 		
 		$type = badgeos_get_achievement_types_slugs();

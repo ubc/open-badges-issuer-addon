@@ -7,7 +7,6 @@ class BOSOBI_Settings {
 	public static $fields = array();
 	
 	public static function init() {
-		error_log('=> TRACE BOSOBI: init settings on ' . current_filter());
 		self::$sections_slug = self::$prefix . '-sections';
 		self::$page_slug = self::$prefix . '-page';
 
@@ -39,7 +38,6 @@ class BOSOBI_Settings {
 	}
 
 	static function init_network_admin_menus() {
-		error_log('=> TRACE BOSOBI: init_network_admin_menus on ' . current_filter());
 		add_submenu_page( 'settings.php',
 			__( 'Open Badges Issuer', 'bosobi' ),
 			__( 'Open Badges Issuer', 'bosobi' ),
@@ -287,7 +285,7 @@ class BOSOBI_Settings {
 				'default' => 'hosted',
 			),
 			'allow_override' => array(
-				'default' => 'on',
+				'default' => ( BadgeOS_Open_Badges_Issuer_AddOn::is_network_activated() ? 'off' : 'on' ),
 			),
 			'alt_email' => array(),
 			'public_evidence' => array(),

@@ -23,7 +23,6 @@ class BadgeOS_Open_Badges_Issuer_AddOn {
 	);
 	
 	public static function init() {
-		error_log('=> TRACE BOSOBI: init');
 		self::$basename       = plugin_basename( __FILE__ );
 		self::$directory_path = plugin_dir_path( __FILE__ );
 		self::$directory_url  = plugins_url( dirname( self::$basename ) );
@@ -39,9 +38,7 @@ class BadgeOS_Open_Badges_Issuer_AddOn {
 	 * @filter plugins_loaded
 	 */
 	public static function load() {
-		error_log('=> TRACE BOSOBI: load on ' . current_filter());
 		if ( self::meets_requirements() ) {
-			error_log('=> TRACE BOSOBI: does meet requirements');
 			load_plugin_textdomain( 'bosobi', false, dirname( self::$basename ) . '/languages' );
 
 			require_once( sprintf( "%s/includes/class-bosobi-json.php", self::$directory_path ) );

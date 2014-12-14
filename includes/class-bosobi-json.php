@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * This file handles the configuration of the JSON API plugin for our usage.
+ */
 class BOSOBI_JSON {
 
 	public static function init() {
@@ -8,16 +11,18 @@ class BOSOBI_JSON {
 	}
 
 	/**
-	* Register controllers for custom JSON_API end points.
-	*/
+	 * Register controllers for custom JSON_API end points.
+	 * @filter json_api_controllers
+	 */
 	public static function add_badge_controller( $controllers ) {
 		$controllers[] = 'badge';
 		return $controllers;
 	}
 
 	/**
-	* Register controllers define path custom JSON_API end points.
-	*/
+	 * Register controllers define path custom JSON_API end points.
+	 * @filter json_api_badge_controller_path
+	 */
 	public function get_badge_controller_path() {
 		return sprintf( "%s/api/badge.php", BadgeOS_Open_Badges_Issuer_AddOn::$directory_path );
 	}

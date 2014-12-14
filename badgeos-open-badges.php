@@ -112,6 +112,9 @@ class BadgeOS_Open_Badges_Issuer_AddOn {
 		return $return;
 	}
 
+	/**
+	 * Checks if this plugin has been network activated.
+	 */
 	public static function is_network_activated() {
 		if ( ! function_exists( 'is_plugin_active' ) ) {
 			include_once( ABSPATH . 'wp-admin/includes/plugin.php' );

@@ -2,23 +2,20 @@
 /**
  * Controller name: Mozilla Open Badges Generator
  * Controller description: Generates Mozilla Open Badges compatible Assertions for the BadgeOS plugin
+ * 
+ * This class uses the JSON API plugin to exspose an api that other websites can query to get data from our plugin.
+ * Each function in this class represents an api endpoint that can be accessed at the url
+ * /api/badge/<function name>?<query parameters>
  */
 class JSON_API_Badge_Controller {
 
+	// This function is not intended as an api endpoint.
 	public function log_headers() {
 		$headers = apache_request_headers();
 
-		foreach ($headers as $header => $value) {
+		foreach ( $headers as $header => $value ) {
 			error_log("$header: $value");
 		}
-	}
-
-	public function public_key() {
-		error_log('-- START API CALL --');
-		error_log('-> public_key');
-		self::log_headers();
-		print_r( BOSOBI_Settings::get( 'public_key' ) );
-		error_log('-- END API CALL --');
 	}
 
 	/* TODO: Implement server-side badge baking, instead of delegating our badge backing to backpack.openbadges.org/baker
@@ -33,40 +30,70 @@ class JSON_API_Badge_Controller {
 	}
 	*/
 
+	/**
+	 * Renders the public key used by this plugin so that our assertions can be verified using it.
+	 */
+	public function public_key() {
+		error_log('-- START API CALL --');
+		error_log('-> public_key');
+		self::log_headers();
+		// Because out public key is not a json, we print it out instead of returning it.
+		print_r( BOSOBI_Settings::get( 'public_key' ) );
+		error_log('-- END API CALL --');
+	}
+
+	/**
+	 * Render an assertion for a single badge.
+	 * This api expects a uid parameter in the url query.
+	 * The uid indicates what badge we are rendering for.
+	 */
 	public function assertion() {
 		error_log('-- START API CALL --');
 		error_log('-> assertion');
 		self::log_headers();
 		global $json_api;
 
+		// Get the query data.
 		$uid_str = $json_api->query->uid;
 		$uid = explode ( "-" , $uid_str );
 		$post_id = $uid[0];
 		$user_id = $uid[2];
 		$assertion = array();
 
+		// Make sure that the uid references a valid post.
 		if ( isset( $post_id ) ) {
+			// Was this request made with the intention of baking the image?
 			$for_baking = $json_api->query->bake;
+			// Should we render a signed assertion? If the request is for baking, then it has to be hosted, not signed.
 			$use_signed_verification = BOSOBI_Settings::get( 'assertion_type' ) === 'signed' && ! $for_baking;
 
+			// Get the api url.
 			$base_url = site_url() . '/' . get_option( 'json_api_base', 'api' );
+			// Get the post for our post_id
 			$submission = get_post( $post_id );
+			// This salt is used to encode the user's email.
 			$salt = "0ct3L";
+			// Get the user's email.
 			$email = BOSOBI_Shortcodes::registered_email( $user_id );
+			// Get the post type of the post we are handling.
 			$post_type = get_post_type( $post_id );
 			
+			// Check what the post_id is.
 			if ( $post_type === "submission" && BOSOBI_Settings::get( 'public_evidence' ) ) {
+				// If it is a submission, then get the achievement ID from it's post meta.
 				$achievement_id = get_post_meta( $post_id, '_badgeos_submission_achievement_id', true );
 				$assertion['evidence'] = get_permalink( $post_id );
 			} else {
+				// Otherwise, assume that it is an achievement.
 				$achievement_id = $post_id;
 				$assertion['evidence'] = get_permalink( $achievement_id );
 			}
 
+			// If we are using signed verification, then set the appropriate information.
 			if ( $use_signed_verification ) {
 				$verification = array(
 					"type" => "signed",
-					"url"  => $base_url .'/badge/public_key/',
+					"url"  => $base_url .'/badge/public_key/', // This is the public key that will be used to verify our signed assertion.
 				);
 			} else {
 				$verification = array(
@@ -75,8 +102,10 @@ class JSON_API_Badge_Controller {
 				);
 			}
 
+			// Get the badge image.
 			$image_url = wp_get_attachment_url( get_post_thumbnail_id( $achievement_id ) );
 
+			// Put together the assertion, as per the documentation https://github.com/openbadges/openbadges-specification/blob/master/Assertion/latest.md
 			$assertion = array_merge( array(
 				"uid" => $uid_str,
 				"recipient" => array(
@@ -94,31 +123,35 @@ class JSON_API_Badge_Controller {
 			// For signed assertions, the payload must be encoded as a JSON Web Signature
 			// See https://github.com/openbadges/openbadges-specification/blob/master/Assertion/latest.md
 			if ( $verification['type'] === 'signed' ) {
-				//require_once( sprintf( "%s/includes/jwt.php", BadgeOS_Open_Badges_Issuer_AddOn::$directory_path ) );
-				//$assertion = JWT::encode( $assertion, BOSOBI_Settings::get( 'private_key' ) );
-				
-				// An alternate method for encoding, in case we question the integrity of the above method. Requires the phpseclib library.
-				// See: https://github.com/mozilla/openbadges-validator/issues/23#issuecomment-26600324
-				// require_once( sprintf( "%s/includes/phpseclib-0.3.9/Crypt/RSA.php", BadgeOS_Open_Badges_Issuer_AddOn::$directory_path ) );
+				// If the verification type is signed, then we should encode the assertion, using the phpseclib library.
+
+				// We need to temporarily change the include path for using the phpseclib library.
 				$old_include_path = set_include_path( sprintf( "%s/includes/phpseclib-0.3.9/", BadgeOS_Open_Badges_Issuer_AddOn::$directory_path ) );
 				require_once( "Crypt/RSA.php" );
 
+				// Create a new signature.
 				$rsa = new Crypt_RSA();
 				$rsa->setSignatureMode( CRYPT_RSA_SIGNATURE_PKCS1 );
 				$rsa->setHash( 'sha256' );
 				$rsa->setMGFHash( 'sha256' );
 				$rsa->loadKey( BOSOBI_Settings::get( 'private_key' ), CRYPT_RSA_PRIVATE_FORMAT_PKCS1 );
 
+				// Define the data for the signature.
 				$header = array( 'alg' => "RS256" );
 				$headerText = self::base64url_encode( json_encode( $header ) );
 				$assertionText = self::base64url_encode( json_encode( $assertion ) );
 
+				// Put the data together.
 				$input = $headerText . '.' . $assertionText;
 
+				// Sign the signature.
 				$signature = $rsa->sign( $input );
 				$signature = self::base64url_encode( $signature );
 
+				// Set our return value to be our signed assertion.
 				$assertion = $input . '.' . $signature;
+
+				// Return the include_path to it's original value.
 				set_include_path( $old_include_path );
 			}
 		}
@@ -127,21 +160,34 @@ class JSON_API_Badge_Controller {
 		return $assertion;
 	}
 
+	/**
+	 * Encoding used for signed assertions.
+	 */
 	private static function base64url_encode( $data ) {
 		return rtrim( strtr( base64_encode( $data ), '+/', '-_' ), '=' );
 	}
 	
+	/**
+	 * Return the BadgeClass JSON, as per documentation,
+	 * https://github.com/openbadges/openbadges-specification/blob/master/Assertion/latest.md
+	 */
 	public function badge_class() {
 		error_log('-- START API CALL --');
 		error_log('-> badge_class');
 		self::log_headers();
 		global $json_api;
+
+		// Retrieve query data.
 		$post_id = $json_api->query->uid;
 
 		if ( isset( $post_id ) ) {
+			// Get the base url for our API
 			$base_url = site_url() . '/' . get_option( 'json_api_base', 'api' );
+
+			// Get the badge usig query data.
 			$badge = get_post( $post_id );
 
+			// Define the BadgeClass data that will be returned.
 			$class = array(
 				"name"        => $badge->post_title,
   				"description" => ( $badge->post_content ) ? html_entity_decode( strip_tags( $badge->post_content ), ENT_QUOTES, 'UTF-8' ) : "",
@@ -150,6 +196,7 @@ class JSON_API_Badge_Controller {
   				"issuer"      => $base_url . '/badge/issuer/'
   			);
 			
+			// Add any tags our wordpress post might have as tags for the badge.
 			$tags = wp_get_post_tags( array( 'fields' => 'names' ) );
 			if ( ! empty( $tags ) ) {
 				$class['tags'] = $tags;
@@ -162,28 +209,41 @@ class JSON_API_Badge_Controller {
 		error_log('-- END API CALL --');
 	}
 
+	/**
+	 * Return the IssuerOrganization JSON, as per documentation,
+	 * https://github.com/openbadges/openbadges-specification/blob/master/Assertion/latest.md
+	 */
 	public function issuer() {
 		error_log('-- START API CALL --');
 		error_log('-> issuer');
 		self::log_headers();
 
+		// List the optional fields for the json.
 		$issuerFields = array( 'description', 'image', 'email' );
+
+		// Define the required fields for the json.
 		$issuer = array( // These fields are required.
 			"name" => BOSOBI_Settings::get( 'org_name' ),
 			"url"  => BOSOBI_Settings::get( 'org_url' )
 		);
 		
+		// Loop through the optional fields.
 		foreach ( $issuerFields as $field ) {
 			$val = BOSOBI_Settings::get( 'org_' . $field );
+
+			// Check if the field is defined.
 			if ( ! empty( $val ) ) {
-				$issuer[$field] = $val;	
+				// If so, add it to our resulting json.
+				$issuer[ $field ] = $val;	
 			}
 		}
 
+		// Check if the assertion is signed.
 		if ( BOSOBI_Settings::get( 'assertion_type' ) === 'signed' ) {
-			// This field is only needed for signed assertions.
+			// If so, check if the url for our revocation list is define.
 			$val = BOSOBI_Settings::get( 'org_revocationList' );
 			if ( ! empty( $val ) ) {
+				// If so, add it to our resulting json.
 				$issuer['revocationList'] = $val;	
 			}
 		}
@@ -192,12 +252,17 @@ class JSON_API_Badge_Controller {
 		return $issuer;
 	}
 	
+	/**
+	 * Returns a HTML for all achievements that have been earned by a given user.
+	 * This is used to render the backpack_push shortcode.
+	 */
 	public function achievements() {
 		error_log('-- START API CALL --');
 		error_log('-> achievements');
 		self::log_headers();
 		global $blog_id, $json_api;
 		
+		// Get the list of BadgeOS post types.
 		$type = badgeos_get_achievement_types_slugs();
 
 		// Drop steps from our list of "all" achievements
@@ -205,10 +270,10 @@ class JSON_API_Badge_Controller {
 		if ( $step_key ) {
 			unset( $type[ $step_key ] );
 		}
-
+		
 		$type[] = 'submission';
 		$user_id = get_current_user_id();
-
+		
 		// Get the current user if one wasn't specified
 		if ( ! $user_id ) {
 			if ( $json_api->query->user_id ) {

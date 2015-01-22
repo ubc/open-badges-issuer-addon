@@ -120,7 +120,7 @@ class BOSOBI_Shortcodes {
 		$user_id = ( $user_id ) ? $user_id : get_current_user_id();
 		$email_alt_field = BOSOBI_Settings::get( 'alt_email' );
 
-		if ( $email_alt_field !== "" && get_user_meta( $user_id, $email_alt_field, true ) !== "" ){
+		if ( !empty($email_alt_field) && get_user_meta( $user_id, $email_alt_field, true ) !== "" ){
 			return get_user_meta( $user_id, $email_alt_field, true );
 		} else {
 			$user = get_userdata( $user_id );

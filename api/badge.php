@@ -63,7 +63,7 @@ class JSON_API_Badge_Controller {
 		// Make sure that the uid references a valid post.
 		if ( isset( $post_id ) ) {
 			// Was this request made with the intention of baking the image?
-			$for_baking = $json_api->query->bake;
+			$for_baking = true; //$json_api->query->bake; // TODO: Reimplement this if necessary.
 			// Should we render a signed assertion? If the request is for baking, then it has to be hosted, not signed.
 			$use_signed_verification = BOSOBI_Settings::get( 'assertion_type' ) === 'signed' && ! $for_baking;
 

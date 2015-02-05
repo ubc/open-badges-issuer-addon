@@ -117,15 +117,20 @@ class BOSOBI_Shortcodes {
 	}
 	
 	public function registered_email( $user_id = 0 ) {
-		$user_id = ( $user_id ) ? $user_id : get_current_user_id();
+		error_log('get email for '.$user_id);
+		$user_id = empty( $user_id ) ? get_current_user_id() : $user_id;
 		$email_alt_field = BOSOBI_Settings::get( 'alt_email' );
 
-		if ( $email_alt_field !== "" && get_user_meta( $user_id, $email_alt_field, true ) !== "" ){
-			return get_user_meta( $user_id, $email_alt_field, true );
-		} else {
+		if ( ! empty( $email_alt_field ) ) {
+			$email = get_user_meta( $user_id, $email_alt_field, true );
+		}
+
+		if ( empty( $email ) || ! is_string( $email ) ) {
 			$user = get_userdata( $user_id );
-			return $user->user_email;
-		}	
+			$email = $user->user_email;
+		}
+
+		return $email;
 	}
 
 }

@@ -14,7 +14,7 @@ class JSON_API_Badge_Controller {
 		$headers = apache_request_headers();
 
 		foreach ( $headers as $header => $value ) {
-			error_log("$header: $value");
+			//error_log("$header: $value");
 		}
 	}
 
@@ -73,7 +73,7 @@ class JSON_API_Badge_Controller {
 			$salt = "0ct3L";
 			// Get the user's email.
 			$email = BOSOBI_Shortcodes::registered_email( $user_id );
-			$email = strtolower( $email );
+			//$email = strtolower( $email );
 			// Get the post type of the post we are handling.
 			$post_type = get_post_type( $post_id );
 			
@@ -109,13 +109,11 @@ class JSON_API_Badge_Controller {
 				"uid" => $uid_str,
 				"recipient" => array(
 					"type"     => "email",
-					/*
 					"hashed"   => true,
 					"salt"     => $salt,
 					"identity" => 'sha256$' . hash( 'sha256', $email . $salt ),
-					*/
-					"hashed"   => false,
-					"identity" => $email,
+					//"hashed"   => false,
+					//"identity" => $email,
 				),
 				"image"    => $image_url,
 				"issuedOn" => strtotime( $submission->post_date ),

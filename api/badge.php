@@ -62,8 +62,6 @@ class JSON_API_Badge_Controller {
 
 		// Make sure that the uid references a valid post.
 		if ( isset( $post_id ) ) {
-			// Was this request made with the intention of baking the image?
-			$for_baking = true; //$json_api->query->bake; // TODO: Reimplement this if necessary.
 			// Should we render a signed assertion? If the request is for baking, then it has to be hosted, not signed.
 			$use_signed_verification = BOSOBI_Settings::get( 'assertion_type' ) === 'signed' && ! $for_baking;
 
@@ -75,6 +73,7 @@ class JSON_API_Badge_Controller {
 			$salt = "0ct3L";
 			// Get the user's email.
 			$email = BOSOBI_Shortcodes::registered_email( $user_id );
+			$email = strtolower( $email );
 			// Get the post type of the post we are handling.
 			$post_type = get_post_type( $post_id );
 			
@@ -114,7 +113,7 @@ class JSON_API_Badge_Controller {
 					"salt"     => $salt,
 					"identity" => 'sha256$' . hash( 'sha256', $email . $salt )
 				),
-				"image"    => $for_baking ? $image_url : 'http://backpack.openbadges.org/baker?assertion=' . $base_url . '/badge/assertion/?uid=' . $uid_str . '&bake=1',
+				"image"    => $image_url,
 				"issuedOn" => strtotime( $submission->post_date ),
 				"badge"    => $base_url . '/badge/badge_class/?uid=' . $achievement_id,
 				"verify"   => $verification,
@@ -339,7 +338,7 @@ class JSON_API_Badge_Controller {
 			if ( ! in_array( $achievement_id , $hidden ) ) {
 				$uid = $achievement_id . "-" . get_post_time('U', true) . "-" . $user_id;
 				$button_text = ( ! in_array( $base_url . $uid, $pushed_badges ) ) ? __( 'Send to Mozilla Backpack', 'badgeos_obi_issuer' ) : __( 'Resend to Mozilla Backpack', 'badgeos_obi_issuer' ); 
-				$download_url = 'http://backpack.openbadges.org/baker?assertion=' . $base_url . $uid . '&bake=1';
+				$download_url = 'http://backpack.openbadges.org/baker?assertion=' . $base_url . $uid;
 				
 				ob_start();
 

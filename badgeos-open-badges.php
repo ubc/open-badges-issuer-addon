@@ -31,6 +31,25 @@ class BadgeOS_Open_Badges_Issuer_AddOn {
 
 		add_action( 'admin_notices', array( __CLASS__, 'check_requirements' ) );
 		add_action( 'plugins_loaded', array( __CLASS__, 'load' ), 11 );
+		
+		
+		/*
+		 * Fixes by mhawksey, imported by jlam@credil.org
+		 * See https://github.com/mhawksey/open-badges-issuer-addon/issues/3#issuecomment-112331043
+		 */
+		add_filter('badgeos_public_submissions', array('BadgeOS_Open_Badges_Issuer_AddOn', 'get_public_badge_submission'), 999, 1);
+	}
+	
+	
+	/**
+	 * Set if badge submission evidence is public
+	 *
+	 * @since  1.0.0
+	 * @param  boolean $public submission display
+	 * @return boolen               submission display
+	 */
+	public static function get_public_badge_submission($public){
+		return get_option('badgeos_obi_issuer_public_evidence');
 	}
 
 	/**

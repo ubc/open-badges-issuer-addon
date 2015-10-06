@@ -1,7 +1,7 @@
 <?php
 /**
  * @wordpress-plugin
- * Plugin Name:       BadgeOS Open Badges Issuer Add-On
+ * Plugin Name:       BadgeOS Open Badges Issuer Add-On (UBC fork)
  * Description:       This is a BadgeOS add-on which allows you to host Mozilla Open Badges compatible assertions and allow users to push awarded badges directly to their Mozilla  Backpack
  * Version:           1.1.1
  * Author:            mhawksey, CTLT, Devindra Payment

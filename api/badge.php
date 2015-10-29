@@ -9,6 +9,8 @@
  */
 class JSON_API_Badge_Controller {
 
+	const CONTEXT_STR = 'https://w3id.org/openbadges/v1';
+
 	// This function is not intended as an api endpoint.
 	public function log_headers() {
 		$headers = apache_request_headers();
@@ -93,6 +95,8 @@ class JSON_API_Badge_Controller {
 				$assertion['evidence'] = get_permalink( $achievement_id );
 			}
 
+
+			$assertionUrl = $base_url .'/badge/assertion/?uid=' . $uid_str;
 			// If we are using signed verification, then set the appropriate information.
 			if ( $use_signed_verification ) {
 				$verification = array(
@@ -102,7 +106,7 @@ class JSON_API_Badge_Controller {
 			} else {
 				$verification = array(
 					"type" => "hosted",
-					"url"  => $base_url .'/badge/assertion/?uid=' . $uid_str,
+					"url"  => $assertionUrl,
 				);
 			}
 
@@ -111,8 +115,9 @@ class JSON_API_Badge_Controller {
 
 			// Put together the assertion, as per the documentation https://github.com/openbadges/openbadges-specification/blob/master/Assertion/latest.md
 			$assertion = array_merge( array(
-				"@context"	=> "https://w3id.org/openbadges/v1",
+				"@context"	=> self::CONTEXT_STR,
 				"type"		=> "Assertion",
+				"id"		=> $assertionUrl,
 				"uid"		=> $uid_str,
 				"recipient" => array(
 					"type"     => "email",
@@ -122,11 +127,14 @@ class JSON_API_Badge_Controller {
 					//"hashed"   => false,
 					//"identity" => $email,
 				),
-				"image"    => $image_url,
 				"issuedOn" => strtotime( $submission->post_date ),
 				"badge"    => $base_url . '/badge/badge_class/?uid=' . $achievement_id,
 				"verify"   => $verification,
 			), $assertion );
+
+			if($image_url) {
+				$assertion['image'] = $image_url;
+			}
 
 			// For signed assertions, the payload must be encoded as a JSON Web Signature
 			// See https://github.com/openbadges/openbadges-specification/blob/master/Assertion/latest.md
@@ -190,19 +198,35 @@ class JSON_API_Badge_Controller {
 
 		if ( isset( $post_id ) ) {
 			// Get the base url for our API
-			$base_url = site_url() . '/' . get_option( 'json_api_base', 'api' );
+			$base_url	= site_url() . '/' . get_option( 'json_api_base', 'api' );
+
+			// Generate ID url
+			$idUrl = $base_url . '/badge/badge_class/?uid=' . $post_id;
 
 			// Get the badge usig query data.
-			$badge = get_post( $post_id );
+			$badge		= get_post( $post_id );
+
+			// Get URL for this post
+			$badgeURL	= get_permalink( $post_id );
+
+			// Since there is no function to get excerpt by postID, setup the data:
+			setup_postdata( $badge );
+
+			// Get description
+			#$postDescription = $badge->post_content;
+			$postDescription = get_the_excerpt();
+			$badgeDescription = ($postDescription ) ? html_entity_decode( strip_tags( $postDescription), ENT_QUOTES, 'UTF-8' ) : "";
+
 
 			// Define the BadgeClass data that will be returned.
 			$class = array(
-				"@context"	=> "https://w3id.org/openbadges/v1",
+				"@context"	=> self::CONTEXT_STR,
 				"type"		=> "BadgeClass",
+				"id"		=> $idUrl,
 				"name"        => $badge->post_title,
-  				"description" => ( $badge->post_content ) ? html_entity_decode( strip_tags( $badge->post_content ), ENT_QUOTES, 'UTF-8' ) : "",
+  				"description" => $badgeDescription ?: "",
   				"image"       => wp_get_attachment_url( get_post_thumbnail_id( $post_id )),
-  				"criteria"    => get_permalink( $post_id ),
+  				"criteria"    => $badgeURL,
   				"issuer"      => $base_url . '/badge/issuer/'
   			);
 
@@ -228,13 +252,20 @@ class JSON_API_Badge_Controller {
 		error_log('-> issuer');
 		self::log_headers();
 
+		// Get the base url for our API and generate ID
+		$base_url	= site_url() . '/' . get_option( 'json_api_base', 'api' );
+		$id      	= $base_url . '/badge/issuer/';
+
 		// List the optional fields for the json.
 		$issuerFields = array( 'description', 'image', 'email' );
 
 		// Define the required fields for the json.
 		$issuer = array( // These fields are required.
-			"name" => BOSOBI_Settings::get( 'org_name' ),
-			"url"  => BOSOBI_Settings::get( 'org_url' )
+			"@context"	=> self::CONTEXT_STR,
+			"type"		=> "IssuerOrg",
+			"id"		=> $id,
+			"name" 		=> BOSOBI_Settings::get( 'org_name' ),
+			"url"  		=> BOSOBI_Settings::get( 'org_url' )
 		);
 
 		// Loop through the optional fields.

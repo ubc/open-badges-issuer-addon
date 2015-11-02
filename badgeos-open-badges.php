@@ -1,7 +1,7 @@
 <?php
 /**
  * @wordpress-plugin
- * Plugin Name:       BadgeOS Open Badges Issuer Add-On
+ * Plugin Name:       BadgeOS Open Badges Issuer Add-On (UBC fork)
  * Description:       This is a BadgeOS add-on which allows you to host Mozilla Open Badges compatible assertions and allow users to push awarded badges directly to their Mozilla  Backpack
  * Version:           1.1.1
  * Author:            mhawksey, CTLT, Devindra Payment
@@ -31,6 +31,32 @@ class BadgeOS_Open_Badges_Issuer_AddOn {
 
 		add_action( 'admin_notices', array( __CLASS__, 'check_requirements' ) );
 		add_action( 'plugins_loaded', array( __CLASS__, 'load' ), 11 );
+		
+		
+		/*
+		 * Fixes by mhawksey, imported by jlam@credil.org
+		 * See https://github.com/mhawksey/open-badges-issuer-addon/issues/3#issuecomment-112331043
+		 * 
+		 * cyclingzealot changed the function name from set_public_badge_submission 
+		 *   to get_public_badge_submission
+		 */
+		add_filter('badgeos_public_submissions', array('BadgeOS_Open_Badges_Issuer_AddOn', 'get_public_badge_submission'), 999, 1);
+	}
+	
+	
+	/**
+	 * Set if badge submission evidence is public
+	 * 
+	 * cyclingzealot changed the function name from set_public_badge_submission 
+	 * to get_public_badge_submission
+	 *
+	 * @since  1.0.0
+	 * @param  boolean $public submission display
+	 * @author mhawksey, cyclingzealot - jlam@credil.org
+	 * @return boolen               submission display
+	 */
+	public static function get_public_badge_submission($public){
+		return get_option('badgeos_obi_issuer_public_evidence');
 	}
 
 	/**

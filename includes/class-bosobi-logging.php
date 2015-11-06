@@ -21,7 +21,7 @@ class BOSOBI_Logging {
 	/**
 	 * Handle ajax request to record sending of badges to backpack.
 	 */
-	function ajax_request_recorder() {
+	public static function ajax_request_recorder() {
 		// Setup our AJAX query vars
 		$successes = ( isset( $_REQUEST['successes'] ) ? $_REQUEST['successes'] : false );
 		$errors    = ( isset( $_REQUEST['errors'] )    ? $_REQUEST['errors']    : false );
@@ -52,7 +52,7 @@ class BOSOBI_Logging {
 	 *
 	 * @since 1.0.0
 	 */
-	function create_log_post_type() {	
+	public static function create_log_post_type() {	
 		// Register Log Entries CPT
 		register_post_type( 'open-badge-entry', array(
 			'labels'             => array(

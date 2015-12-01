@@ -11,15 +11,6 @@ class JSON_API_Badge_Controller {
 
 	const CONTEXT_STR = 'https://w3id.org/openbadges/v1';
 
-	// This function is not intended as an api endpoint.
-	public function log_headers() {
-		$headers = apache_request_headers();
-
-		foreach ( $headers as $header => $value ) {
-			//error_log("$header: $value");
-		}
-	}
-
 	/* TODO: Implement server-side badge baking, instead of delegating our badge backing to backpack.openbadges.org/baker
 	public function baked_badge() {
 		$png = new PNG_MetaDataHandler('file.png');
@@ -36,12 +27,8 @@ class JSON_API_Badge_Controller {
 	 * Renders the public key used by this plugin so that our assertions can be verified using it.
 	 */
 	public function public_key() {
-		error_log('-- START API CALL --');
-		error_log('-> public_key');
-		self::log_headers();
 		// Because out public key is not a json, we print it out instead of returning it.
 		print_r( BOSOBI_Settings::get( 'public_key' ) );
-		error_log('-- END API CALL --');
 	}
 
 	/**
@@ -50,9 +37,6 @@ class JSON_API_Badge_Controller {
 	 * The uid indicates what badge we are rendering for.
 	 */
 	public function assertion() {
-		error_log('-- START API CALL --');
-		error_log('-> assertion');
-		self::log_headers();
 		global $json_api;
 
 		// Get the query data.
@@ -132,7 +116,7 @@ class JSON_API_Badge_Controller {
 				"verify"   => $verification,
 			), $assertion );
 
-			if($image_url) {
+			if ( $image_url ) {
 				$assertion['image'] = $image_url;
 			}
 
@@ -172,7 +156,6 @@ class JSON_API_Badge_Controller {
 			}
 		}
 
-		error_log('-- END API CALL --');
 		return $assertion;
 	}
 
@@ -188,9 +171,6 @@ class JSON_API_Badge_Controller {
 	 * https://github.com/openbadges/openbadges-specification/blob/master/Assertion/latest.md
 	 */
 	public function badge_class() {
-		error_log('-- START API CALL --');
-		error_log('-> badge_class');
-		self::log_headers();
 		global $json_api;
 
 		// Retrieve query data.
@@ -204,10 +184,10 @@ class JSON_API_Badge_Controller {
 			$idUrl = $base_url . '/badge/badge_class/?uid=' . $post_id;
 
 			// Get the badge usig query data.
-			$badge		= get_post( $post_id );
+			$badge = get_post( $post_id );
 
 			// Get URL for this post
-			$badgeURL	= get_permalink( $post_id );
+			$badgeURL = get_permalink( $post_id );
 
 			// Since there is no function to get excerpt by postID, setup the data:
 			setup_postdata( $badge );
@@ -236,11 +216,8 @@ class JSON_API_Badge_Controller {
 				$class['tags'] = $tags;
 			}
 
-			error_log('-- END API CALL --');
   			return $class;
 		}
-
-		error_log('-- END API CALL --');
 	}
 
 	/**
@@ -248,10 +225,6 @@ class JSON_API_Badge_Controller {
 	 * https://github.com/openbadges/openbadges-specification/blob/master/Assertion/latest.md
 	 */
 	public function issuer() {
-		error_log('-- START API CALL --');
-		error_log('-> issuer');
-		self::log_headers();
-
 		// Get the base url for our API and generate ID
 		$base_url	= site_url() . '/' . get_option( 'json_api_base', 'api' );
 		$id      	= $base_url . '/badge/issuer/';
@@ -289,7 +262,6 @@ class JSON_API_Badge_Controller {
 			}
 		}
 
-		error_log('-- END API CALL --');
 		return $issuer;
 	}
 
@@ -298,9 +270,6 @@ class JSON_API_Badge_Controller {
 	 * This is used to render the backpack_push shortcode.
 	 */
 	public function achievements() {
-		error_log('-- START API CALL --');
-		error_log('-> achievements');
-		self::log_headers();
 		global $blog_id, $json_api;
 
 		// Get the list of BadgeOS post types.
@@ -410,7 +379,6 @@ class JSON_API_Badge_Controller {
 			}
 		}
 
-		error_log('-- END API CALL --');
 		return array(
 			"achievements" => $achievements,
 			"count"        => $achievement_count

@@ -26,7 +26,7 @@ class BOSOBI_Shortcodes {
 	 * @filter wp_enqueue_scripts
 	 */
 	public static function register_scripts_and_styles() {
-		wp_register_script( 'mozilla-issuer-api', '//backpack.openbadges.org/issuer.js', array( 'badgeos-backpack' ), null );
+		wp_register_script( 'mozilla-issuer-api', 'https://backpack.openbadges.org/issuer.js', array( 'badgeos-backpack' ), null );
 		wp_register_script( 'badgeos-backpack', BadgeOS_Open_Badges_Issuer_AddOn::$directory_url . '/public/js/badgeos-backpack.js', array( 'jquery' ), '1.0.0', true );
 		wp_register_style( 'badgeos-backpack-style', BadgeOS_Open_Badges_Issuer_AddOn::$directory_url . '/public/css/badgeos-backpack.css', null, '1.0.2' );
 	}
@@ -117,7 +117,6 @@ class BOSOBI_Shortcodes {
 	}
 	
 	public function registered_email( $user_id = 0 ) {
-		error_log('get email for '.$user_id);
 		$user_id = empty( $user_id ) ? get_current_user_id() : $user_id;
 		$email_alt_field = BOSOBI_Settings::get( 'alt_email' );
 
